@@ -87,6 +87,20 @@ public class ApplicationCompositionFactory {
         }
     }
 
+    public static String getApplicationIdentification(ResourceByteRangeProvider resourceByteRangeProvider, IMFErrorLogger imfErrorLogger) throws IOException {
+        String applicationIdentification;
+        try {
+            IMFCompositionPlaylistType imfCompositionPlaylistType = IMFCompositionPlaylistType.getCompositionPlayListType(resourceByteRangeProvider, imfErrorLogger);
+            applicationIdentification = imfCompositionPlaylistType.getApplicationIdentification();
+        }
+        catch(IMFException e) {
+            imfErrorLogger.addAllErrors(e.getErrors());
+            return null;
+        }
+
+        return applicationIdentification;
+    }
+
     public static ApplicationComposition getApplicationComposition(File inputFile, IMFErrorLogger imfErrorLogger) throws IOException {
         return getApplicationComposition(new FileByteRangeProvider(inputFile), imfErrorLogger);
     }

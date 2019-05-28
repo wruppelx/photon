@@ -25,8 +25,10 @@ import testUtils.TestHelper;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import static com.netflix.imflibrary.app.IMPAnalyzer.analyzePackage;
 
@@ -37,11 +39,12 @@ public class IMPAnalyzerTestMultiAppIMP
     public void IMPAnalyzerTestMultiAppIMP() throws IOException
     {
         File inputFile = TestHelper.findResourceByPath("TestIMP/Application5/MultiAppIMP/");
+        Set<String> appIdSet= new HashSet<>();
         Map<String, List<ErrorLogger.ErrorObject>> errorMap = analyzePackage(inputFile);
         Assert.assertEquals(errorMap.size(), 8);
         errorMap.entrySet().stream().forEach( e ->
                 {
-                	if (e.getKey().matches("CPL_be8dd1cf-f6e0-4455-ac6f-b22d28557755.xml Virtual Track Conformance")) {
+                    if (e.getKey().matches("CPL_be8dd1cf-f6e0-4455-ac6f-b22d28557755.xml Virtual Track Conformance")) {
                         Assert.assertEquals(e.getValue().size(), 2);
                     } else if (e.getKey().matches("CPL_eaf76289-fd79-477f-9526-e34d69a8f57a.xml")) {
                         Assert.assertEquals(e.getValue().size(), 1);
@@ -51,6 +54,78 @@ public class IMPAnalyzerTestMultiAppIMP
                         Assert.assertEquals(e.getValue().size(), 3);
                     } else if (e.getKey().matches("CPL_be8dd1cf-f6e0-4455-ac6f-b22d28557755.xml")) {
                         Assert.assertEquals(e.getValue().size(), 1);
+                    } else if (e.getKey().matches("CPL_eaf76289-fd79-477f-9526-e34d69a8f57a.xml Virtual Track Conformance")) {
+                        Assert.assertEquals(e.getValue().size(), 2);
+                    } else {
+                        Assert.assertEquals(e.getValue().size(), 0);
+                    }
+                }
+        );
+        // One out of three CPLs matches appIdSet
+        appIdSet.add("http://www.smpte-ra.org/schemas/2067-20/2016");
+        errorMap = analyzePackage(inputFile, appIdSet);
+        Assert.assertEquals(errorMap.size(), 8);
+        errorMap.entrySet().stream().forEach( e ->
+                {
+                    if (e.getKey().matches("CPL_be8dd1cf-f6e0-4455-ac6f-b22d28557755.xml Virtual Track Conformance")) {
+                        Assert.assertEquals(e.getValue().size(), 2);
+                    } else if (e.getKey().matches("CPL_eaf76289-fd79-477f-9526-e34d69a8f57a.xml")) {
+                        Assert.assertEquals(e.getValue().size(), 2);
+                    } else if (e.getKey().matches("CPL_a74cc26b-a87d-4fde-9a28-1865a5ef33db.xml")) {
+                        Assert.assertEquals(e.getValue().size(), 0);
+                    } else if (e.getKey().matches("CPL_a74cc26b-a87d-4fde-9a28-1865a5ef33db.xml Virtual Track Conformance")) {
+                        Assert.assertEquals(e.getValue().size(), 3);
+                    } else if (e.getKey().matches("CPL_be8dd1cf-f6e0-4455-ac6f-b22d28557755.xml")) {
+                        Assert.assertEquals(e.getValue().size(), 2);
+                    } else if (e.getKey().matches("CPL_eaf76289-fd79-477f-9526-e34d69a8f57a.xml Virtual Track Conformance")) {
+                        Assert.assertEquals(e.getValue().size(), 2);
+                    } else {
+                        Assert.assertEquals(e.getValue().size(), 0);
+                    }
+                }
+        );
+        // Two out of three CPLs match appIdSet
+        appIdSet= new HashSet<>();
+        appIdSet.add("http://www.smpte-ra.org/schemas/2067-20/2016");
+        appIdSet.add("http://www.smpte-ra.org/ns/2067-50/2017");
+        errorMap = analyzePackage(inputFile, appIdSet);
+        Assert.assertEquals(errorMap.size(), 8);
+        errorMap.entrySet().stream().forEach( e ->
+                {
+                    if (e.getKey().matches("CPL_be8dd1cf-f6e0-4455-ac6f-b22d28557755.xml Virtual Track Conformance")) {
+                        Assert.assertEquals(e.getValue().size(), 2);
+                    } else if (e.getKey().matches("CPL_eaf76289-fd79-477f-9526-e34d69a8f57a.xml")) {
+                        Assert.assertEquals(e.getValue().size(), 1);
+                    } else if (e.getKey().matches("CPL_a74cc26b-a87d-4fde-9a28-1865a5ef33db.xml")) {
+                        Assert.assertEquals(e.getValue().size(), 0);
+                    } else if (e.getKey().matches("CPL_a74cc26b-a87d-4fde-9a28-1865a5ef33db.xml Virtual Track Conformance")) {
+                        Assert.assertEquals(e.getValue().size(), 3);
+                    } else if (e.getKey().matches("CPL_be8dd1cf-f6e0-4455-ac6f-b22d28557755.xml")) {
+                        Assert.assertEquals(e.getValue().size(), 2);
+                    } else if (e.getKey().matches("CPL_eaf76289-fd79-477f-9526-e34d69a8f57a.xml Virtual Track Conformance")) {
+                        Assert.assertEquals(e.getValue().size(), 2);
+                    } else {
+                        Assert.assertEquals(e.getValue().size(), 0);
+                    }
+                }
+        );
+        // None of three CPLs matches appIdSet
+        appIdSet= new HashSet<>();
+        appIdSet.add("http://www.smpte-ra.org/schemas/2067-21/2016");
+        errorMap = analyzePackage(inputFile, appIdSet);
+        Assert.assertEquals(errorMap.size(), 8);
+        errorMap.entrySet().stream().forEach( e ->
+                {
+                    if (e.getKey().matches("CPL_be8dd1cf-f6e0-4455-ac6f-b22d28557755.xml Virtual Track Conformance")) {
+                        Assert.assertEquals(e.getValue().size(), 2);
+                    } else if (e.getKey().matches("CPL_eaf76289-fd79-477f-9526-e34d69a8f57a.xml")) {
+                        Assert.assertEquals(e.getValue().size(), 2);
+                    } else if (e.getKey().matches("CPL_a74cc26b-a87d-4fde-9a28-1865a5ef33db.xml")) {
+                        Assert.assertEquals(e.getValue().size(), 1);
+                    } else if (e.getKey().matches("CPL_a74cc26b-a87d-4fde-9a28-1865a5ef33db.xml Virtual Track Conformance")) {
+                        Assert.assertEquals(e.getValue().size(), 3);
+                    } else if (e.getKey().matches("CPL_be8dd1cf-f6e0-4455-ac6f-b22d28557755.xml")) {
+                        Assert.assertEquals(e.getValue().size(), 2);
                     } else if (e.getKey().matches("CPL_eaf76289-fd79-477f-9526-e34d69a8f57a.xml Virtual Track Conformance")) {
                         Assert.assertEquals(e.getValue().size(), 2);
                     } else {

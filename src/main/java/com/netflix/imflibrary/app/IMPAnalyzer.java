@@ -20,6 +20,7 @@ import com.netflix.imflibrary.st2067_2.ApplicationComposition;
 import com.netflix.imflibrary.st2067_2.ApplicationCompositionFactory;
 import com.netflix.imflibrary.st2067_2.Composition;
 import com.netflix.imflibrary.st2067_2.IMFEssenceComponentVirtualTrack;
+import com.netflix.imflibrary.st2067_2.ApplicationCompositionFactory.ApplicationCompositionType;
 import com.netflix.imflibrary.utils.ByteArrayDataProvider;
 import com.netflix.imflibrary.utils.ByteProvider;
 import com.netflix.imflibrary.utils.ErrorLogger;
@@ -40,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.StringTokenizer;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -55,6 +57,7 @@ public class IMPAnalyzer {
 
     private static final String CONFORMANCE_LOGGER_PREFIX = "Virtual Track Conformance";
     private static final Logger logger = LoggerFactory.getLogger(IMPAnalyzer.class);
+    private static Set<String> expectedApplicationIdentificationSet = new HashSet<>();
 
     private static Map<UUID, PayloadRecord> getTrackFileIdToHeaderPartitionPayLoadMap(List<PayloadRecord>
                                                                                 headerPartitionPayloadRecords) throws
@@ -234,6 +237,11 @@ public class IMPAnalyzer {
         return imfErrorLogger.getErrors();
     }
 
+    public static Map<String, List<ErrorLogger.ErrorObject>> analyzePackage(File rootFile, Set<String> rExpectedApplicationIdentificationSet) throws IOException {
+        expectedApplicationIdentificationSet = rExpectedApplicationIdentificationSet;
+        return analyzePackage(rootFile);
+    }
+
     public static Map<String, List<ErrorLogger.ErrorObject>> analyzePackage(File rootFile) throws IOException {
         Map<String, List<ErrorLogger.ErrorObject>> errorMap = new HashMap<>();
         IMFErrorLogger imfErrorLogger = new IMFErrorLoggerImpl();
@@ -300,6 +308,16 @@ public class IMPAnalyzer {
                             }
                         }
 
+                        expectedApplicationIdentificationSet.forEach(
+                            e -> {
+                                ApplicationCompositionType applicationCompositionType = ApplicationCompositionType.fromApplicationID(e);
+                                if (applicationCompositionType == ApplicationCompositionType.APPLICATION_UNSUPPORTED_COMPOSITION_TYPE) {
+                                    imfErrorLogger.addError(IMFErrorLogger.IMFErrors.ErrorCodes.INTERNAL_ERROR, IMFErrorLogger.IMFErrors.ErrorLevels.NON_FATAL, 
+                                            String.format("Specified ApplicationIdentification %s is not supported", e));
+                                    errorMap.put("Command line option", imfErrorLogger.getErrors());
+                                }
+                            });
+
                         List<ApplicationComposition> applicationCompositionList = analyzeApplicationCompositions( rootFile, assetMap, packingList, headerPartitionPayloadRecords, packingListErrorLogger, errorMap);
 
                         analyzeOutputProfileLists( rootFile, assetMap, packingList, applicationCompositionList, packingListErrorLogger, errorMap);
@@ -321,6 +339,8 @@ public class IMPAnalyzer {
             imfErrorLogger.addAllErrors(e.getErrors());
             errorMap.put(rootFile.getName(), imfErrorLogger.getErrors());
         }
+        // Reset expectedApplicationIdentificationSet, needs to be set explicitly for each subsequent call of analyzePackage()
+        expectedApplicationIdentificationSet = new HashSet<>();
 
         return errorMap;
     }
@@ -445,6 +465,14 @@ public class IMPAnalyzer {
                         if(applicationComposition == null) {
                             continue;
                         }
+                        String applicationIdentification = ApplicationCompositionFactory.getApplicationIdentification(resourceByteRangeProvider, compositionErrorLogger);
+
+                        if (!expectedApplicationIdentificationSet.isEmpty() && !expectedApplicationIdentificationSet.contains(applicationIdentification)) {
+                            compositionErrorLogger.addError(IMFErrorLogger.IMFErrors.ErrorCodes.APPLICATION_COMPOSITION_ERROR,
+                                    IMFErrorLogger.IMFErrors.ErrorLevels.NON_FATAL,
+                                    String.format("CPL ApplicationIdentification is %s vs. expected one of %s", applicationIdentification, expectedApplicationIdentificationSet.toString()));
+                        }
+
 
                         applicationCompositionList.add(applicationComposition);
                         Set<UUID> trackFileIDsSet = trackFileIDToHeaderPartitionPayLoadMap
@@ -545,6 +573,8 @@ public class IMPAnalyzer {
         sb.append(String.format("%s <asset_map_file>%n", IMPAnalyzer.class.getName()));
         sb.append(String.format("%s <pkl_file>%n", IMPAnalyzer.class.getName()));
         sb.append(String.format("%s <mxf_file>%n", IMPAnalyzer.class.getName()));
+        sb.append(String.format("options:            %n"));
+        sb.append(String.format("-a, --applications <URI_LIST> Test if each CPL's ApplicationIdentification is contained in a Set of URIs, <URI_LIST> is a list of comma-separated URIs"));
         return sb.toString();
     }
 
@@ -577,7 +607,7 @@ public class IMPAnalyzer {
 
     public static void main(String args[]) throws IOException
     {
-        if (args.length != 1)
+        if ((args.length != 1) && (args.length != 3))
         {
             logger.error(usage());
             System.exit(-1);
@@ -588,6 +618,27 @@ public class IMPAnalyzer {
         if(!inputFile.exists()){
             logger.error(String.format("File %s does not exist", inputFile.getAbsolutePath()));
             System.exit(-1);
+        }
+
+        for(int argIdx = 1; argIdx < args.length; ++argIdx)
+        {
+            String curArg = args[argIdx];
+            String nextArg = argIdx < args.length - 1 ? args[argIdx + 1] : "";
+            if(curArg.equalsIgnoreCase("--application") || curArg.equalsIgnoreCase("-a")) {
+                if(nextArg.length() == 0 || nextArg.charAt(0) == '-') {
+                    logger.error(usage());
+                    System.exit(-1);
+                }
+                StringTokenizer appId = new StringTokenizer(nextArg, ",");
+                while(appId.hasMoreTokens()) {
+                    expectedApplicationIdentificationSet.add(appId.nextToken());
+                }
+                argIdx++;
+            }
+            else {
+                logger.error(usage());
+                System.exit(-1);
+            }
         }
 
         if(inputFile.isDirectory()) {
