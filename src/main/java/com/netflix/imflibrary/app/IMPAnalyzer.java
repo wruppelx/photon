@@ -624,7 +624,7 @@ public class IMPAnalyzer {
         {
             String curArg = args[argIdx];
             String nextArg = argIdx < args.length - 1 ? args[argIdx + 1] : "";
-            if(curArg.equalsIgnoreCase("--application") || curArg.equalsIgnoreCase("-a")) {
+            if(curArg.equalsIgnoreCase("--applications") || curArg.equalsIgnoreCase("-a")) {
                 if(nextArg.length() == 0 || nextArg.charAt(0) == '-') {
                     logger.error(usage());
                     System.exit(-1);
