@@ -240,7 +240,7 @@ public final class MXFPropertyPopulator
     }
 
     /**
-     * Getter for a string representing the byte[]
+     * Getter for a string representing the byte[], terminating on the first null character
      *
      * @param byteArray the byte array
      * @param charset the charset
@@ -248,7 +248,7 @@ public final class MXFPropertyPopulator
      */
     public static String getString(byte[] byteArray, Charset charset)
     {
-        return new String(byteArray, charset);
+        return new String(byteArray, charset).split("\u0000", 2)[0];
     }
 
     /**
