@@ -11,9 +11,12 @@ import com.netflix.imflibrary.st0377.HeaderPartition;
 import com.netflix.imflibrary.st0377.IndexTableSegment;
 import com.netflix.imflibrary.st0377.PartitionPack;
 import com.netflix.imflibrary.st0377.RandomIndexPack;
+import com.netflix.imflibrary.st0377.header.GenericDescriptor;
 import com.netflix.imflibrary.st0377.header.GenericPackage;
+import com.netflix.imflibrary.st0377.header.InterchangeObject;
 import com.netflix.imflibrary.st0377.header.Preface;
 import com.netflix.imflibrary.st0377.header.SourcePackage;
+import com.netflix.imflibrary.st0377.header.WaveAudioEssenceDescriptor;
 import com.netflix.imflibrary.st0429_8.PackingList;
 import com.netflix.imflibrary.st0429_9.AssetMap;
 import com.netflix.imflibrary.st2067_100.OutputProfileList;
@@ -24,6 +27,10 @@ import com.netflix.imflibrary.st2067_2.Composition.VirtualTrack;
 import com.netflix.imflibrary.st2067_2.IMFEssenceComponentVirtualTrack;
 import com.netflix.imflibrary.st2067_201.IABTrackFileConstraints;
 import com.netflix.imflibrary.st2067_203.MGASADMTrackFileConstraints;
+import com.netflix.imflibrary.st2067_204.ADMAudioTrackFileConstraints;
+import com.netflix.imflibrary.st2067_204.ADMSoundfieldGroupLabelSubDescriptor;
+import com.netflix.imflibrary.st2067_204.ADM_CHNASubDescriptor;
+import com.netflix.imflibrary.st2067_204.ADMAudioMetadataSubDescriptor;
 import com.netflix.imflibrary.utils.ByteArrayByteRangeProvider;
 import com.netflix.imflibrary.utils.ByteArrayDataProvider;
 import com.netflix.imflibrary.utils.ByteProvider;
@@ -50,6 +57,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * A RESTful interface for validating an IMF Master Package.
@@ -593,6 +601,9 @@ public class IMPValidator {
                     0L,
                     (long)payloadRecord.getPayload().length,
                     imfErrorLogger);
+                Preface preface = headerPartition.getPreface();
+                GenericPackage genericPackage = preface.getContentStorage().getEssenceContainerDataList().get(0).getLinkedPackage();
+                SourcePackage filePackage = (SourcePackage) genericPackage;
                 MXFOperationalPattern1A.HeaderPartitionOP1A headerPartitionOP1A = MXFOperationalPattern1A.checkOperationalPattern1ACompliance(headerPartition, imfErrorLogger);
                 IMFConstraints.HeaderPartitionIMF headerPartitionIMF = IMFConstraints.checkIMFCompliance(headerPartitionOP1A, imfErrorLogger);
                 if (headerPartitionIMF.getEssenceType() == HeaderPartition.EssenceTypeEnum.IABEssence) {
@@ -600,6 +611,19 @@ public class IMPValidator {
                 }
                 if (headerPartitionIMF.getEssenceType() == HeaderPartition.EssenceTypeEnum.MGASADMEssence) {
                     MGASADMTrackFileConstraints.checkCompliance(headerPartitionIMF, imfErrorLogger);
+                }
+                if (headerPartitionIMF.getEssenceType() == HeaderPartition.EssenceTypeEnum.MainAudioEssence) {
+                    GenericDescriptor genericDescriptor = filePackage.getGenericDescriptor();
+                    if (genericDescriptor instanceof WaveAudioEssenceDescriptor) { // Potential support for st2067-204, check if an ADMAudioMetadataSubDescriptor or ADM_CHNASubDescriptor is present
+                        List<InterchangeObject.InterchangeObjectBO> subDescriptors = headerPartition.getSubDescriptors();
+                        if (subDescriptors.size() != 0) {
+                            List<InterchangeObject.InterchangeObjectBO> admAudioMetadataSubDescriptors = subDescriptors.subList(0, subDescriptors.size()).stream().filter(interchangeObjectBO -> interchangeObjectBO.getClass().getEnclosingClass().equals(ADMAudioMetadataSubDescriptor.class)).collect(Collectors.toList());
+                            List<InterchangeObject.InterchangeObjectBO> adm_CHNASubDescriptors = subDescriptors.subList(0, subDescriptors.size()).stream().filter(interchangeObjectBO -> interchangeObjectBO.getClass().getEnclosingClass().equals(ADM_CHNASubDescriptor.class)).collect(Collectors.toList());
+                                if (!admAudioMetadataSubDescriptors.isEmpty() || !adm_CHNASubDescriptors.isEmpty()) {
+                                    ADMAudioTrackFileConstraints.checkCompliance(headerPartitionIMF, imfErrorLogger);
+                                }
+                        }
+                    }
                 }
             }
             catch (IMFException | MXFException e){
@@ -715,6 +739,19 @@ public class IMPValidator {
                 }
                 if (headerPartitionIMF.hasMatchingEssence(HeaderPartition.EssenceTypeEnum.MGASADMEssence)) {
                     MGASADMTrackFileConstraints.checkCompliance(headerPartitionIMF, imfErrorLogger);
+                }
+                if (headerPartitionIMF.hasMatchingEssence(HeaderPartition.EssenceTypeEnum.MainAudioEssence)) {
+                    GenericDescriptor genericDescriptor = filePackage.getGenericDescriptor();
+                    if (genericDescriptor instanceof WaveAudioEssenceDescriptor) { // Potential support for st2067-204, check if an ADMAudioMetadataSubDescriptor or ADM_CHNASubDescriptor is present
+                        List<InterchangeObject.InterchangeObjectBO> subDescriptors = headerPartition.getSubDescriptors();
+                        if (subDescriptors.size() != 0) {
+                            List<InterchangeObject.InterchangeObjectBO> admAudioMetadataSubDescriptors = subDescriptors.subList(0, subDescriptors.size()).stream().filter(interchangeObjectBO -> interchangeObjectBO.getClass().getEnclosingClass().equals(ADMAudioMetadataSubDescriptor.class)).collect(Collectors.toList());
+                            List<InterchangeObject.InterchangeObjectBO> adm_CHNASubDescriptors = subDescriptors.subList(0, subDescriptors.size()).stream().filter(interchangeObjectBO -> interchangeObjectBO.getClass().getEnclosingClass().equals(ADM_CHNASubDescriptor.class)).collect(Collectors.toList());
+                                if (!admAudioMetadataSubDescriptors.isEmpty() || !adm_CHNASubDescriptors.isEmpty()) {
+                                    ADMAudioTrackFileConstraints.checkCompliance(headerPartitionIMF, imfErrorLogger);
+                                }
+                        }
+                    }
                 }
             }
             catch (IMFException | MXFException e){

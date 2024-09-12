@@ -21,6 +21,7 @@ import com.netflix.imflibrary.st2067_2.ApplicationCompositionFactory;
 import com.netflix.imflibrary.st2067_2.Composition;
 import com.netflix.imflibrary.st2067_2.IMFEssenceComponentVirtualTrack;
 import com.netflix.imflibrary.st2067_203.IMFMGASADMConstraintsChecker;
+import com.netflix.imflibrary.st2067_204.IMFADMAudioConstraintsChecker;
 import com.netflix.imflibrary.utils.ByteArrayDataProvider;
 import com.netflix.imflibrary.utils.ByteProvider;
 import com.netflix.imflibrary.utils.ErrorLogger;
@@ -460,6 +461,11 @@ public class IMPAnalyzer {
                         // ST 2067-203 MGASADMVirtualTrackParameterSet checks
                         List<ErrorLogger.ErrorObject> errors = IMFMGASADMConstraintsChecker.checkMGASADMVirtualTrackParameterSet(applicationComposition);
                         // Report MGASADMVirtualTrackParameterSet as both CPL and Virtual Track errors
+                        compositionConformanceErrorLogger.addAllErrors(errors);
+                        compositionErrorLogger.addAllErrors(errors);
+                        // ST 2067-204 ADMAudioVirtualTrackParameterSet checks
+                        errors = IMFADMAudioConstraintsChecker.checkADMAudioVirtualTrackParameterSet(applicationComposition);
+                        // Report ADMAudioVirtualTrackParameterSet as both CPL and Virtual Track errors
                         compositionConformanceErrorLogger.addAllErrors(errors);
                         compositionErrorLogger.addAllErrors(errors);
 

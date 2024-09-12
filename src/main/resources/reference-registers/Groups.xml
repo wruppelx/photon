@@ -7575,6 +7575,174 @@ THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND 
     <Entry>
       <Register>Groups</Register>
       <NamespaceName>http://www.smpte-ra.org/reg/395/2014/13/1/aaf</NamespaceName>
+      <Symbol>RIFFChunkDefinitionSubDescriptor</Symbol>
+      <UL>urn:smpte:ul:060e2b34.027f0101.0d010101.0101810d</UL>
+      <Kind>LEAF</Kind>
+      <Name>RIFF Chunk Definition Sub-Descriptor</Name>
+      <Definition>RIFF Chunk Definition Sub-Descriptor</Definition>
+      <DefiningDocument>SMPTE ST 2131</DefiningDocument>
+      <IsDeprecated>false</IsDeprecated>
+      <Parent>urn:smpte:ul:060e2b34.027f0101.0d010101.01015900</Parent>
+      <IsConcrete>true</IsConcrete>
+      <KLVSyntax>06 53</KLVSyntax>
+      <Contents>
+        <Record>
+          <UL>urn:smpte:ul:060e2b34.0101010e.04020308.01000000</UL>
+          <IsOptional>false</IsOptional>
+        </Record>
+        <Record>
+          <UL>urn:smpte:ul:060e2b34.0101010e.04020308.02000000</UL>
+          <IsOptional>false</IsOptional>
+        </Record>
+        <Record>
+          <UL>urn:smpte:ul:060e2b34.0101010e.04020308.03000000</UL>
+          <IsOptional>true</IsOptional>
+        </Record>
+        <Record>
+          <UL>urn:smpte:ul:060e2b34.0101010e.04020308.04000000</UL>
+          <IsOptional>true</IsOptional>
+        </Record>
+      </Contents>
+    </Entry>
+    <Entry>
+      <Register>Groups</Register>
+      <NamespaceName>http://www.smpte-ra.org/reg/395/2014/13/1/aaf</NamespaceName>
+      <Symbol>ADM_CHNASubDescriptor</Symbol>
+      <UL>urn:smpte:ul:060e2b34.027f0101.0d010101.0101810e</UL>
+      <Kind>LEAF</Kind>
+      <Name>ADM CHNA Sub-Descriptor</Name>
+      <Definition>ADM CHNA Sub-Descriptor</Definition>
+      <DefiningDocument>SMPTE ST 2131</DefiningDocument>
+      <IsDeprecated>false</IsDeprecated>
+      <Parent>urn:smpte:ul:060e2b34.027f0101.0d010101.01015900</Parent>
+      <IsConcrete>true</IsConcrete>
+      <KLVSyntax>06 53</KLVSyntax>
+      <Contents>
+        <Record>
+          <UL>urn:smpte:ul:060e2b34.0101010e.04020309.01000000</UL>
+          <IsOptional>false</IsOptional>
+        </Record>
+        <Record>
+          <UL>urn:smpte:ul:060e2b34.0101010e.04020309.02000000</UL>
+          <IsOptional>false</IsOptional>
+        </Record>
+        <Record>
+          <UL>urn:smpte:ul:060e2b34.0101010e.04020309.03000000</UL>
+          <IsOptional>false</IsOptional>
+        </Record>
+      </Contents>
+    </Entry>
+    <Entry>
+      <Register>Groups</Register>
+      <NamespaceName>http://www.smpte-ra.org/reg/395/2014/13/1/aaf</NamespaceName>
+      <Symbol>ADMChannelMapping</Symbol>
+      <UL>urn:smpte:ul:060e2b34.027f0101.0d010101.0101810f</UL>
+      <Kind>LEAF</Kind>
+      <Name>ADM Channel Mapping</Name>
+      <Definition>ADM Channel Mapping</Definition>
+      <DefiningDocument>SMPTE ST 2131</DefiningDocument>
+      <IsDeprecated>false</IsDeprecated>
+      <Parent>urn:smpte:ul:060e2b34.027f0101.0d010101.01010100</Parent>
+      <IsConcrete>true</IsConcrete>
+      <KLVSyntax>06 53</KLVSyntax>
+      <Contents>
+        <Record>
+          <UL>urn:smpte:ul:060e2b34.0101010e.04020309.04000000</UL>
+          <IsOptional>false</IsOptional>
+        </Record>
+        <Record>
+          <UL>urn:smpte:ul:060e2b34.0101010e.04020309.05000000</UL>
+          <IsOptional>false</IsOptional>
+        </Record>
+        <Record>
+          <UL>urn:smpte:ul:060e2b34.0101010e.04020309.06000000</UL>
+          <IsOptional>false</IsOptional>
+        </Record>
+        <Record>
+          <UL>urn:smpte:ul:060e2b34.0101010e.04020309.07000000</UL>
+          <IsOptional>true</IsOptional>
+        </Record>
+      </Contents>
+    </Entry>
+    <Entry>
+      <Register>Groups</Register>
+      <NamespaceName>http://www.smpte-ra.org/reg/395/2014/13/1/aaf</NamespaceName>
+      <Symbol>RIFFChunkReferencesSubDescriptor</Symbol>
+      <UL>urn:smpte:ul:060e2b34.027f0101.0d010101.01018110</UL>
+      <Kind>LEAF</Kind>
+      <Name>RIFF Chunk References Sub-Descriptor</Name>
+      <Definition>RIFF Chunk References Sub-Descriptor</Definition>
+      <DefiningDocument>SMPTE ST 2131</DefiningDocument>
+      <IsDeprecated>false</IsDeprecated>
+      <Parent>urn:smpte:ul:060e2b34.027f0101.0d010101.01015900</Parent>
+      <IsConcrete>true</IsConcrete>
+      <KLVSyntax>06 53</KLVSyntax>
+      <Contents>
+        <Record>
+          <UL>urn:smpte:ul:060e2b34.0101010e.04020308.06000000</UL>
+          <IsOptional>false</IsOptional>
+        </Record>
+      </Contents>
+    </Entry>
+    <Entry>
+      <Register>Groups</Register>
+      <NamespaceName>http://www.smpte-ra.org/reg/395/2014/13/1/aaf</NamespaceName>
+      <Symbol>ADMAudioMetadataSubDescriptor</Symbol>
+      <UL>urn:smpte:ul:060e2b34.027f0101.0d010101.01018111</UL>
+      <Kind>LEAF</Kind>
+      <Name>ADM Audio Metadata Sub-Descriptor</Name>
+      <Definition>ADM Audio Metadata Sub-Descriptor</Definition>
+      <DefiningDocument>SMPTE ST 2131</DefiningDocument>
+      <IsDeprecated>false</IsDeprecated>
+      <Parent>urn:smpte:ul:060e2b34.027f0101.0d010101.01015900</Parent>
+      <IsConcrete>true</IsConcrete>
+      <KLVSyntax>06 53</KLVSyntax>
+      <Contents>
+        <Record>
+          <UL>urn:smpte:ul:060e2b34.0101010e.0402030a.01000000</UL>
+          <IsOptional>false</IsOptional>
+        </Record>
+        <Record>
+          <UL>urn:smpte:ul:060e2b34.0101010e.0402030a.02000000</UL>
+          <IsOptional>true</IsOptional>
+        </Record>
+      </Contents>
+    </Entry>
+    <Entry>
+      <Register>Groups</Register>
+      <NamespaceName>http://www.smpte-ra.org/reg/395/2014/13/1/aaf</NamespaceName>
+      <Symbol>ADMSoundfieldGroupLabelSubDescriptor</Symbol>
+      <UL>urn:smpte:ul:060e2b34.027f0101.0d010101.01018112</UL>
+      <Kind>LEAF</Kind>
+      <Name>ADM Soundfield Group Label Sub-Descriptor</Name>
+      <Definition>ADM Soundfield Group Label Sub-Descriptor</Definition>
+      <DefiningDocument>SMPTE ST 2131</DefiningDocument>
+      <IsDeprecated>false</IsDeprecated>
+      <Parent>urn:smpte:ul:060e2b34.027f0101.0d010101.01016c00</Parent>
+      <IsConcrete>true</IsConcrete>
+      <KLVSyntax>06 53</KLVSyntax>
+      <Contents>
+        <Record>
+          <UL>urn:smpte:ul:060e2b34.0101010e.0402030b.01000000</UL>
+          <IsOptional>false</IsOptional>
+        </Record>
+        <Record>
+          <UL>urn:smpte:ul:060e2b34.0101010e.0402030b.02000000</UL>
+          <IsOptional>true</IsOptional>
+        </Record>
+        <Record>
+          <UL>urn:smpte:ul:060e2b34.0101010e.0402030b.03000000</UL>
+          <IsOptional>true</IsOptional>
+        </Record>
+        <Record>
+          <UL>urn:smpte:ul:060e2b34.0101010e.0402030b.04000000</UL>
+          <IsOptional>true</IsOptional>
+        </Record>
+      </Contents>
+    </Entry>
+    <Entry>
+      <Register>Groups</Register>
+      <NamespaceName>http://www.smpte-ra.org/reg/395/2014/13/1/aaf</NamespaceName>
       <Symbol>MGASoundEssenceDescriptor</Symbol>
       <UL>urn:smpte:ul:060e2b34.027f0101.0d010101.01018106</UL>
       <Kind>LEAF</Kind>
