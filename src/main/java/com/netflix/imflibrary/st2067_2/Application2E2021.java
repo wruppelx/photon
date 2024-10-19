@@ -8,7 +8,7 @@ import com.netflix.imflibrary.st0377.header.GenericPictureEssenceDescriptor.Fram
 import com.netflix.imflibrary.st0377.header.UL;
 import com.netflix.imflibrary.IMFErrorLogger;
 import com.netflix.imflibrary.st2067_2.ApplicationCompositionFactory.ApplicationCompositionType;
-import com.netflix.imflibrary.st2067_2.CompositionImageEssenceDescriptorModel.J2KHeaderParameters;
+import com.netflix.imflibrary.J2KHeaderParameters;
 import com.netflix.imflibrary.st2067_2.CompositionImageEssenceDescriptorModel.ProgressionOrder;
 import com.netflix.imflibrary.utils.Fraction;
 import com.netflix.imflibrary.JPEG2000;
@@ -20,14 +20,14 @@ import java.util.List;
 import java.util.Set;
 import java.util.Arrays;
 
-import static com.netflix.imflibrary.st0377.header.GenericPictureEssenceDescriptor.FrameLayoutType;
-
 /**
  * A class that models Composition with Application 2Extended constraints from
  * 2067-21 specification
  */
 public class Application2E2021 extends AbstractApplicationComposition {
+    public static final String APP_IDENTIFICATION = "http://www.smpte-ra.org/ns/2067-21/2021";
     private static String APP_STRING = ApplicationCompositionType.APPLICATION_2E2021_COMPOSITION_TYPE.toString();
+
 
     static class CharacteristicsSet {
         private Integer maxWidth;
@@ -274,11 +274,9 @@ public class Application2E2021 extends AbstractApplicationComposition {
 
     /* Validate codestream parameters against constraints listed in SMPTE ST 2067-21:2023 Annex I */
 
-    private static boolean validateHT(CompositionImageEssenceDescriptorModel imageDescriptor,
+    public static boolean validateHTConstraints(J2KHeaderParameters p,
                                      IMFErrorLogger logger) {
         boolean isValid = true;
-
-        J2KHeaderParameters p = imageDescriptor.getJ2KHeaderParameters();
 
         if (p == null) {
             logger.addError(
@@ -556,7 +554,7 @@ public class Application2E2021 extends AbstractApplicationComposition {
         Integer height = imageDescriptor.getStoredHeight();
 
         if (JPEG2000.isAPP2HT(essenceCoding))
-            return validateHT(imageDescriptor, logger);
+            return validateHTConstraints(imageDescriptor.getJ2KHeaderParameters(), logger);
 
         if (JPEG2000.isIMF4KProfile(essenceCoding))
             return width > 2048 && width <= 4096 && height > 0 && height <= 3112;
@@ -606,7 +604,7 @@ public class Application2E2021 extends AbstractApplicationComposition {
                 IMFErrorLogger.IMFErrors.ErrorLevels.NON_FATAL,
                 String.format(
                 "Invalid image characteristics per %s",
-                    APP_STRING
+                APP_STRING
                 )
             );
         }
