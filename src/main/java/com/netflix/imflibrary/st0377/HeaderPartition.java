@@ -29,22 +29,21 @@ import com.netflix.imflibrary.exceptions.MXFException;
 import com.netflix.imflibrary.st0377.header.*;
 import com.netflix.imflibrary.st2067_2.AudioContentKind;
 import com.netflix.imflibrary.st2067_2.Composition;
+import com.netflix.imflibrary.st2067_201.IABChannelSubDescriptor;
 import com.netflix.imflibrary.st2067_201.IABEssenceDescriptor;
 import com.netflix.imflibrary.st2067_201.IABSoundfieldLabelSubDescriptor;
+import com.netflix.imflibrary.st2067_202.ISXDDataEssenceDescriptor;
 import com.netflix.imflibrary.st2067_203.MGASoundEssenceDescriptor;
 import com.netflix.imflibrary.st2067_203.MGASoundfieldGroupLabelSubDescriptor;
-import com.netflix.imflibrary.utils.ByteArrayDataProvider;
-import com.netflix.imflibrary.utils.ByteProvider;
-import com.netflix.imflibrary.utils.ErrorLogger;
-import com.netflix.imflibrary.utils.FileByteRangeProvider;
-import com.netflix.imflibrary.utils.ResourceByteRangeProvider;
+import com.netflix.imflibrary.st379_2.ContainerConstraintsSubDescriptor;
+import com.netflix.imflibrary.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
+import jakarta.annotation.Nonnull;
+import jakarta.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
-import java.io.File;
+import java.nio.file.Path;
 import java.io.IOException;
 import java.lang.reflect.Constructor;
 import java.lang.reflect.InvocationTargetException;
@@ -169,7 +168,33 @@ public final class HeaderPartition
                 }
                 else
                 {
-                    byteProvider.skipBytes(header.getVSize());
+                    // Unknown structural metadata (e.g. new sub-descriptor types from updated registers).
+                    // Parse enough to get instance_uid and register so strong references resolve.
+                    // Validate VSize before attempting to read the entire value into memory to avoid
+                    // excessive allocations or integer overflow on cast.
+                    final long vSize = header.getVSize();
+                    // Define a conservative upper bound for KLV values we are willing to fully buffer.
+                    final long MAX_REASONABLE_KLV_VALUE_SIZE = 1024L * 1024L * 1024L; // 1 GiB
+                    if (vSize < 0 || vSize > Integer.MAX_VALUE || vSize > MAX_REASONABLE_KLV_VALUE_SIZE) {
+                        throw new MXFException(String.format(
+                                "KLV value size %d is invalid or too large to buffer safely.", vSize));
+                    }
+                    byte[] valueBytes = byteProvider.getBytes((int) vSize);
+                    byte[] instanceUid = StructuralMetadata.extractInstanceUid(valueBytes,
+                            this.primerPack.getLocalTagEntryBatch().getLocalTagToUIDMap(), header);
+                    if (instanceUid != null) {
+                        GenericInterchangeObject.GenericInterchangeObjectBO genericBO =
+                                new GenericInterchangeObject.GenericInterchangeObjectBO(header, instanceUid);
+                        List<InterchangeObject.InterchangeObjectBO> list = this.interchangeObjectBOsMap.get(
+                                GenericInterchangeObject.GenericInterchangeObjectBO.class.getSimpleName());
+                        if (list == null) {
+                            list = new ArrayList<>();
+                            this.interchangeObjectBOsMap.put(
+                                    GenericInterchangeObject.GenericInterchangeObjectBO.class.getSimpleName(), list);
+                        }
+                        list.add(genericBO);
+                        uidToBOs.put(genericBO.getInstanceUID(), genericBO);
+                    }
                 }
 
             }
@@ -192,7 +217,7 @@ public final class HeaderPartition
                             prefaceSetCount));
         }
 
-        if (imfErrorLogger.getNumberOfErrors() > numErrors)//Flag an exception if any errors were accumulated while parsing and reading the HeaderPartition
+        if (imfErrorLogger.hasFatalErrors(numErrors, imfErrorLogger.getNumberOfErrors())) //Flag exception if fatal errors occured
         {
             List<ErrorLogger.ErrorObject> errorObjectList = imfErrorLogger.getErrors();
             for(int i=numErrors; i< errorObjectList.size(); i++) {
@@ -470,6 +495,21 @@ public final class HeaderPartition
                     DescriptiveMarkerSegment descriptiveMarkerSegment = new DescriptiveMarkerSegment((DescriptiveMarkerSegment.DescriptiveMarkerSegmentBO) interchangeObjectBO, dmFramework);
                     this.cacheInterchangeObject(descriptiveMarkerSegment);
                     uidToMetadataSets.put(interchangeObjectBO.getInstanceUID(), descriptiveMarkerSegment);
+                } else if(interchangeObjectBO.getClass().getEnclosingClass().equals(ISXDDataEssenceDescriptor.class)){
+                    for(Node dependent : node.depends) {
+                        InterchangeObject dependentInterchangeObject = uidToMetadataSets.get(dependent.uid);
+                        /*Although we do retrieve the dependent SubDescriptor for this ISXDDataEssenceDescriptor we do not really have a need for it,
+                        * since it can always be retrieved using the strong reference present in the subDescriptors collection of the ISXDDataEssenceDescriptor
+                        * on the other hand passing a reference to the SubDescriptor to the constructor can be problematic since SubDescriptors are optional*/
+                        ContainerConstraintsSubDescriptor containerConstraintsSubDescriptor = null;
+                        if(dependentInterchangeObject instanceof ContainerConstraintsSubDescriptor){
+                            containerConstraintsSubDescriptor = (ContainerConstraintsSubDescriptor) dependentInterchangeObject;
+                        }
+                        /*Add similar casting code for other sub descriptors when relevant*/
+                    }
+                    ISXDDataEssenceDescriptor isxdDataEssenceDescriptor = new ISXDDataEssenceDescriptor((ISXDDataEssenceDescriptor.ISXDEssenceDescriptorBO) interchangeObjectBO);
+                    this.cacheInterchangeObject(isxdDataEssenceDescriptor);
+                    uidToMetadataSets.put(interchangeObjectBO.getInstanceUID(), isxdDataEssenceDescriptor);
                 }
             }
         }
@@ -897,6 +937,15 @@ public final class HeaderPartition
     public List<InterchangeObject> getIABSoundFieldLabelSubDescriptors()
     {
         return this.getInterchangeObjects(IABSoundfieldLabelSubDescriptor.class);
+    }
+
+    /**
+     * Gets all the IAB Channel SubDescriptors associated with this HeaderPartition object
+     * @return list of IAB Channel SubDescriptors contained in this header partition
+     */
+    public List<InterchangeObject> getIABChannelSubDescriptors()
+    {
+        return this.getInterchangeObjects(IABChannelSubDescriptor.class);
     }
 
     /**
@@ -1479,28 +1528,28 @@ public final class HeaderPartition
     }
 
     /**
-     * A static method to get the Header Partition from a file
-     * @param inputFile source file to get the Header Partition from
+     * A static method to get the Header Partition from a path
+     * @param input source path to get the Header Partition from
      * @param imfErrorLogger logging object
-     * @return an HeaderPartition object constructed from the file
+     * @return an HeaderPartition object constructed from the path
      * @throws IOException any I/O related error will be exposed through an IOException
      */
-    public static HeaderPartition fromFile(File inputFile, IMFErrorLogger imfErrorLogger) throws IOException {
-        ResourceByteRangeProvider resourceByteRangeProvider = new FileByteRangeProvider(inputFile);
+    public static HeaderPartition fromPath(Path input, IMFErrorLogger imfErrorLogger) throws IOException {
+        ResourceByteRangeProvider resourceByteRangeProvider = new FileByteRangeProvider(input);
 
         long archiveFileSize = resourceByteRangeProvider.getResourceSize();
         long rangeEnd = archiveFileSize - 1;
         long rangeStart = archiveFileSize - 4;
         byte[] bytes = resourceByteRangeProvider.getByteRangeAsBytes(rangeStart, rangeEnd);
         PayloadRecord payloadRecord = new PayloadRecord(bytes, PayloadRecord.PayloadAssetType.EssenceFooter4Bytes, rangeStart, rangeEnd);
-        Long randomIndexPackSize = IMPValidator.getRandomIndexPackSize(payloadRecord);
+        Long randomIndexPackSize = MXFUtils.getRandomIndexPackSize(payloadRecord);
 
         rangeStart = archiveFileSize - randomIndexPackSize;
         rangeEnd = archiveFileSize - 1;
 
         byte[] randomIndexPackBytes = resourceByteRangeProvider.getByteRangeAsBytes(rangeStart, rangeEnd);
         PayloadRecord randomIndexPackPayload = new PayloadRecord(randomIndexPackBytes, PayloadRecord.PayloadAssetType.EssencePartition, rangeStart, rangeEnd);
-        List<Long> partitionByteOffsets = IMPValidator.getEssencePartitionOffsets(randomIndexPackPayload, randomIndexPackSize);
+        List<Long> partitionByteOffsets = MXFUtils.getEssencePartitionOffsets(randomIndexPackPayload, randomIndexPackSize);
 
         rangeStart = partitionByteOffsets.get(0);
         rangeEnd = partitionByteOffsets.get(1) - 1;

@@ -22,9 +22,9 @@ import org.testng.Assert;
 import org.testng.annotations.Test;
 
 import testUtils.TestHelper;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 
 @Test(groups = "unit")
 public class IMFTrackFileCPLBuilderTests {
@@ -32,10 +32,25 @@ public class IMFTrackFileCPLBuilderTests {
     @Test
     public void IMFTrackFileCPLBuilderTest() throws IOException
     {
-        File inputFile = TestHelper.findResourceByPath("TearsOfSteel_4k_Test_Master_Audio_002.mxf");
-        File workingDirectory = Files.createTempDirectory(null).toFile();
+        Path inputFile = TestHelper.findResourceByPath("TearsOfSteel_4k_Test_Master_Audio_002.mxf");
+        Path workingDirectory = Files.createTempDirectory(null);
         IMFTrackFileCPLBuilder imfTrackFileCPLBuilder = new IMFTrackFileCPLBuilder(workingDirectory, inputFile);
         IMFErrorLogger imfErrorLogger = new IMFErrorLoggerImpl();
-        Assert.assertTrue(imfTrackFileCPLBuilder.getCompositionPlaylist(imfErrorLogger).length() > 0);
+        Assert.assertTrue(Files.size(imfTrackFileCPLBuilder.getCompositionPlaylist(imfErrorLogger)) > 0);
+    }
+
+    @Test
+    public void IMFTrackFileCPLBuilderIABTest() throws IOException
+    {
+        Path inputFile = TestHelper.findResourceByPath("TestIMP/IAB/CompleteIMP2026/IAB_3e755a84-10ba-48a8-b577-0271f9ff7d7a.mxf");
+        Path workingDirectory = Files.createTempDirectory(null);
+        IMFTrackFileCPLBuilder imfTrackFileCPLBuilder = new IMFTrackFileCPLBuilder(workingDirectory, inputFile);
+        IMFErrorLogger imfErrorLogger = new IMFErrorLoggerImpl();
+        Path cpl = imfTrackFileCPLBuilder.getCompositionPlaylist(imfErrorLogger);
+        Assert.assertEquals(imfErrorLogger.getErrors().size(), 0);
+        // The generated CPL must carry an IABSequence in the ST 2067-201 namespace.
+        String cplXml = Files.readString(cpl);
+        Assert.assertTrue(cplXml.contains("IABSequence"));
+        Assert.assertTrue(cplXml.contains("http://www.smpte-ra.org/ns/2067-201/2019"));
     }
 }
