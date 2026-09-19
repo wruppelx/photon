@@ -67,7 +67,7 @@ public class IMFADMAudioConstraintsChecker {
         Iterator iterator = virtualTrackMap.entrySet().iterator();
         while(iterator.hasNext()) {
             Composition.VirtualTrack virtualTrack = ((Map.Entry<UUID, ? extends Composition.VirtualTrack>) iterator.next()).getValue();
-            if (!virtualTrack.getSequenceTypeEnum().equals(Composition.SequenceTypeEnum.ADMAudioSequence)) continue;
+            if (!virtualTrack.getSequenceType().equals("ADMAudioSequence")) continue;
 
             List<? extends IMFBaseResourceType> virtualTrackResourceList = virtualTrack.getResourceList();
             for(IMFBaseResourceType baseResource : virtualTrackResourceList) {
@@ -200,7 +200,7 @@ public class IMFADMAudioConstraintsChecker {
         }
         for (IMFEssenceComponentVirtualTrack virtualTrack : applicationComposition.getEssenceVirtualTracks()) {
             // ST 2067-204, section 5.3.4, check for an ADM Audio Virtual Track Parameter Set for each ADM Audio Virtual Track
-            if (virtualTrack.getSequenceTypeEnum() == SequenceTypeEnum.ADMAudioSequence) {
+            if (virtualTrack.getSequenceType() == "ADMAudioSequence") {
                 admAudioSignalSequenceTrackIds.add(UUIDHelper.fromUUID(virtualTrack.getTrackID()));
                 List<String> resource_id_list = new ArrayList<>();
                 for (IMFBaseResourceType resource : virtualTrack.getResourceList()) {

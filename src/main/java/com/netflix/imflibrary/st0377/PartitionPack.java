@@ -26,7 +26,7 @@ import com.netflix.imflibrary.exceptions.MXFException;
 import com.netflix.imflibrary.annotations.MXFProperty;
 import com.netflix.imflibrary.MXFPropertyPopulator;
 
-import javax.annotation.Nullable;
+import jakarta.annotation.Nullable;
 import javax.annotation.concurrent.Immutable;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -162,6 +162,16 @@ public final class  PartitionPack
     public int getNumberOfEssenceContainerULs()
     {
         return this.essenceContainerBatch.size();
+    }
+
+
+    /**
+     * Getter for the number of essence container ULs that are referred by this partition pack
+     * @return the number of essence container ULs that are referred by this partition pack
+     */
+    public List<UL> getEssenceContainerULs()
+    {
+        return this.essenceContainerBatch.getEntries();
     }
 
     /**

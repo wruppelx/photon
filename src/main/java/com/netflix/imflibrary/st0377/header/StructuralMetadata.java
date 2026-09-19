@@ -20,8 +20,10 @@ package com.netflix.imflibrary.st0377.header;
 
 
 import com.netflix.imflibrary.MXFUID;
+import com.netflix.imflibrary.st2067_201.IABChannelSubDescriptor;
 import com.netflix.imflibrary.st2067_201.IABEssenceDescriptor;
 import com.netflix.imflibrary.st2067_201.IABSoundfieldLabelSubDescriptor;
+import com.netflix.imflibrary.st2067_202.ISXDDataEssenceDescriptor;
 import com.netflix.imflibrary.st2067_203.MGASoundEssenceDescriptor;
 import com.netflix.imflibrary.st2067_203.MGAAudioMetadataSubDescriptor;
 import com.netflix.imflibrary.st2067_203.MGASoundfieldGroupLabelSubDescriptor;
@@ -37,6 +39,7 @@ import com.netflix.imflibrary.utils.ByteProvider;
 import com.netflix.imflibrary.exceptions.MXFException;
 import com.netflix.imflibrary.MXFPropertyPopulator;
 import com.netflix.imflibrary.KLVPacket;
+import com.netflix.imflibrary.utils.ByteArrayDataProvider;
 
 import java.io.IOException;
 import java.util.Arrays;
@@ -61,8 +64,8 @@ public final class StructuralMetadata
     private static final byte[] DESCRIPTIVE_METADATA_KEY_MASK = {   1,    1,    1,    1,    1,    0,    1,    0,    1,    1,    1,    1,    0,    0,    0,    1};
 
 
-    private static final byte[] PHDR_METADATA_TRACK_SUBDESCRIPTOR = {0x06, 0x0e, 0x2b, 0x34, 0x02, 0x53, 0x01, 0x05, 0x0e, 0x09, 0x06, 0x07, 0x01, 0x01, 0x01, 0x03};
-
+    private static final byte[] PHDR_METADATA_TRACK_SUBDESCRIPTOR   = {0x06, 0x0e, 0x2b, 0x34, 0x02, 0x53, 0x01, 0x05, 0x0e, 0x09, 0x06, 0x07, 0x01, 0x01, 0x01, 0x03};
+    private static final byte[] ISXD_DATA_ESSENCE_DESCRIPTOR        = {0x06, 0x0e, 0x2b, 0x34, 0x02, 0x53, 0x01, 0x05, 0x0e, 0x09, 0x05, 0x02, 0x00, 0x00, 0x00, 0x00};
 
     private static final Map<MXFUID, String> ItemULToItemName;
     static
@@ -351,6 +354,12 @@ public final class StructuralMetadata
             MXFUID mxfUL = new MXFUID(byteArray);
             map.put(mxfUL, "reference_audio_alignment_level");
         }
+        //GenericDataEssenceDescriptor
+        {
+            byte[] byteArray = {0x06, 0x0e, 0x2b, 0x34, 0x01, 0x01, 0x01, 0x03, 0x04, 0x03, 0x03, 0x02, 0x00, 0x00, 0x00, 0x00};
+            MXFUID mxfUL = new MXFUID(byteArray);
+            map.put(mxfUL, "data_essence_coding");
+        }
         //AudioChannelLabelSubDescriptor
         {
             byte[] byteArray = {0x06, 0x0e, 0x2b, 0x34, 0x01, 0x01, 0x01, 0x0e, 0x01, 0x03, 0x07, 0x01, 0x01, 0x00, 0x00, 0x00};
@@ -416,6 +425,33 @@ public final class StructuralMetadata
             byte[] byteArray = {0x06, 0x0e, 0x2b, 0x34, 0x01, 0x01, 0x01, 0x0e, 0x01, 0x03, 0x07, 0x01, 0x06, 0x00, 0x00, 0x00};
             MXFUID mxfUL = new MXFUID(byteArray);
             map.put(mxfUL, "soundfield_group_link_id");
+        }
+        //IABEssenceDescriptor (ST 2067-201:2026, Table 3)
+        {
+            byte[] byteArray = {0x06, 0x0e, 0x2b, 0x34, 0x01, 0x01, 0x01, 0x0e, 0x04, 0x02, 0x03, 0x0c, 0x05, 0x00, 0x00, 0x00};
+            MXFUID mxfUL = new MXFUID(byteArray);
+            map.put(mxfUL, "iab_max_object_count");
+        }
+        //IABChannelSubDescriptor (ST 2067-201:2026, Annex E.1)
+        {
+            byte[] byteArray = {0x06, 0x0e, 0x2b, 0x34, 0x01, 0x01, 0x01, 0x0e, 0x04, 0x02, 0x03, 0x0c, 0x01, 0x00, 0x00, 0x00};
+            MXFUID mxfUL = new MXFUID(byteArray);
+            map.put(mxfUL, "iab_bed_meta_id");
+        }
+        {
+            byte[] byteArray = {0x06, 0x0e, 0x2b, 0x34, 0x01, 0x01, 0x01, 0x0e, 0x04, 0x02, 0x03, 0x0c, 0x02, 0x00, 0x00, 0x00};
+            MXFUID mxfUL = new MXFUID(byteArray);
+            map.put(mxfUL, "iab_channel_id");
+        }
+        {
+            byte[] byteArray = {0x06, 0x0e, 0x2b, 0x34, 0x01, 0x01, 0x01, 0x0e, 0x04, 0x02, 0x03, 0x0c, 0x03, 0x00, 0x00, 0x00};
+            MXFUID mxfUL = new MXFUID(byteArray);
+            map.put(mxfUL, "iab_audio_description");
+        }
+        {
+            byte[] byteArray = {0x06, 0x0e, 0x2b, 0x34, 0x01, 0x01, 0x01, 0x0e, 0x04, 0x02, 0x03, 0x0c, 0x04, 0x00, 0x00, 0x00};
+            MXFUID mxfUL = new MXFUID(byteArray);
+            map.put(mxfUL, "iab_audio_description_text");
         }
 
         /*{
@@ -819,6 +855,28 @@ public final class StructuralMetadata
         ItemULToItemName = Collections.unmodifiableMap(map);
     }
 
+    private static final int VERSION_IGNORE_MASK = 0b1111111011111111;
+
+    /**
+     * Looks up a property name in the ItemULToItemName registry, ignoring the UL version byte (byte 7).
+     * First attempts an exact match for performance, then falls back to a masked comparison.
+     *
+     * @param mxfUL the UL to look up
+     * @return the property name, or null if not found
+     */
+    private static String getItemName(MXFUID mxfUL) {
+        String exactMatch = ItemULToItemName.get(mxfUL);
+        if (exactMatch != null) {
+            return exactMatch;
+        }
+        for (Map.Entry<MXFUID, String> entry : ItemULToItemName.entrySet()) {
+            if (entry.getKey().equalsWithMask(mxfUL, VERSION_IGNORE_MASK)) {
+                return entry.getValue();
+            }
+        }
+        return null;
+    }
+
     /**
      * A method that determines of the key passed in corresponds to a structural metadata set.
      *
@@ -828,6 +886,11 @@ public final class StructuralMetadata
     public static boolean isStructuralMetadata(byte[] key)
     {
         if (isPHDRMetadataTrackSubDescriptor(key))
+        {
+            return true;
+        }
+
+        if (isISXDDataEssenceDescriptor(key))
         {
             return true;
         }
@@ -875,6 +938,22 @@ public final class StructuralMetadata
         return Arrays.equals(key, StructuralMetadata.PHDR_METADATA_TRACK_SUBDESCRIPTOR);
     }
 
+    /**
+     * A method that determines if the key passed in corresponds to a ISXD.
+     *
+     * @param key the key
+     * @return the boolean
+     */
+    public static boolean isISXDDataEssenceDescriptor(byte[] key)
+    {
+        if (Arrays.equals(key, StructuralMetadata.ISXD_DATA_ESSENCE_DESCRIPTOR))
+        {
+            return true;
+        }
+
+        return false;
+    }
+
     public static boolean isAudioWaveClipWrapped(int contentKind){
         if(contentKind == 0x02){
             return true;
@@ -896,6 +975,9 @@ public final class StructuralMetadata
         if (isPHDRMetadataTrackSubDescriptor(key))
         {
             return PHDRMetaDataTrackSubDescriptor.PHDRMetaDataTrackSubDescriptorBO.class;
+        }
+        else if (isISXDDataEssenceDescriptor(key)) {
+            return ISXDDataEssenceDescriptor.ISXDEssenceDescriptorBO.class;
         }
         else if (isStructuralMetadata(key) && (key[13] == 0x01))
         {
@@ -944,7 +1026,7 @@ public final class StructuralMetadata
                 case 0x42 :
                     return GenericSoundEssenceDescriptor.GenericSoundEssenceDescriptorBO.class;
                 case 0x43 :
-                    return Object.class; //Generic Data Essence Descriptor
+                    return GenericDataEssenceDescriptor.GenericDataEssenceDescriptorBO.class; //Generic Data Essence Descriptor
                 case 0x44 :
                     return Object.class; //Multiple Descriptor
                 case 0x32 :
@@ -1001,6 +1083,8 @@ public final class StructuralMetadata
                         return ADMAudioMetadataSubDescriptor.ADMAudioMetadataSubDescriptorBO.class;
                     case 0x12:
                         return ADMSoundfieldGroupLabelSubDescriptor.ADMSoundfieldGroupLabelSubDescriptorBO.class;
+                    case 0x15:
+                        return IABChannelSubDescriptor.IABChannelSubDescriptorBO.class;
                     default :
                         return Object.class;
                     }
@@ -1065,9 +1149,9 @@ public final class StructuralMetadata
 
             //read or skip value
             MXFUID mxfUL = localTagToUIDMap.get(localTag);
-            if ((mxfUL != null) && (StructuralMetadata.ItemULToItemName.get(mxfUL) != null))
+            String itemName = (mxfUL != null) ? getItemName(mxfUL) : null;
+            if (itemName != null)
             {
-                String itemName = StructuralMetadata.ItemULToItemName.get(mxfUL);
                 int expectedLength = MXFPropertyPopulator.getFieldSizeInBytes(object, itemName);
                 if((expectedLength > 0) && (length != expectedLength))
                 {
@@ -1083,6 +1167,77 @@ public final class StructuralMetadata
             numBytesRead += length;
         }
 
+    }
+
+    /**
+     * Extracts the instance_uid (16 bytes) from an MXF local set value.
+     * Used for unknown structural metadata sets so they can be registered in uidToBOs
+     * and strong references (e.g. SubDescriptors) resolve correctly.
+     *
+     * @param valueBytes the raw value bytes of the KLV local set
+     * @param localTagToUIDMap primer pack local tag to UL map
+     * @param header the KLV header (for length field encoding)
+     * @return the 16-byte instance_uid, or null if not found
+     */
+    public static byte[] extractInstanceUid(byte[] valueBytes, Map<Integer, MXFUID> localTagToUIDMap, KLVPacket.Header header) {
+
+        // Step 1: Get the UL for "instance_uid"
+        MXFUID instanceUidUL = null;
+        for (Map.Entry<MXFUID, String> e : ItemULToItemName.entrySet()) {
+            if ("instance_uid".equals(e.getValue())) {
+                instanceUidUL = e.getKey();
+                break;
+            }
+        }
+        if (instanceUidUL == null) {
+            return null;
+        }
+
+        // Step 2: Get the local tag for the "instance_uid" UL
+        Integer instanceUidTag = null;
+        for (Map.Entry<Integer, MXFUID> e : localTagToUIDMap.entrySet()) {
+            if (e.getValue() != null && Arrays.equals(e.getValue().getUID(), instanceUidUL.getUID())) {
+                instanceUidTag = e.getKey();
+                break;
+            }
+        }
+        if (instanceUidTag == null) {
+            return null;
+        }
+
+        // Step 3: Walk the local set and find that item
+        try {
+            ByteProvider provider = new ByteArrayDataProvider(valueBytes);
+            long numBytesRead = 0;
+            while (numBytesRead < valueBytes.length) {
+                byte[] tagBytes = provider.getBytes(2);
+                numBytesRead += 2;
+                int localTag = ((tagBytes[0] & 0xFF) << 8) | (tagBytes[1] & 0xFF);
+                long length;
+                if (header.getRegistryDesignator() == 0x53) {
+                    byte[] lenBytes = provider.getBytes(2);
+                    numBytesRead += 2;
+                    length = ((lenBytes[0] & 0xFF) << 8) | (lenBytes[1] & 0xFF);
+                } else {
+                    KLVPacket.LengthField lengthField = KLVPacket.getLength(provider);
+                    numBytesRead += lengthField.sizeOfLengthField;
+                    length = lengthField.value;
+                }
+                if (localTag == instanceUidTag && length == 16) {
+                    return provider.getBytes(16);
+                }
+                // Validate length before skipping to avoid reading past the end of valueBytes
+                if (length < 0 || numBytesRead + length > valueBytes.length) {
+                    // Malformed data; abort parsing
+                    return null;
+                }
+                provider.skipBytes(length);
+                numBytesRead += length;
+            }
+        } catch (IOException e) {
+            return null;
+        }
+        return null;
     }
 
 }
