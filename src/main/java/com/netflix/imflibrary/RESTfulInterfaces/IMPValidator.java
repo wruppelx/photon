@@ -6,6 +6,35 @@ import com.netflix.imflibrary.exceptions.MXFException;
 import com.netflix.imflibrary.st0377.HeaderPartition;
 import com.netflix.imflibrary.st0377.IndexTableSegment;
 import com.netflix.imflibrary.st0377.PartitionPack;
+import com.netflix.imflibrary.st0377.RandomIndexPack;
+import com.netflix.imflibrary.st0377.header.GenericDescriptor;
+import com.netflix.imflibrary.st0377.header.GenericPackage;
+import com.netflix.imflibrary.st0377.header.InterchangeObject;
+import com.netflix.imflibrary.st0377.header.Preface;
+import com.netflix.imflibrary.st0377.header.SourcePackage;
+import com.netflix.imflibrary.st0377.header.WaveAudioEssenceDescriptor;
+import com.netflix.imflibrary.st0429_8.PackingList;
+import com.netflix.imflibrary.st0429_9.AssetMap;
+import com.netflix.imflibrary.st2067_100.OutputProfileList;
+import com.netflix.imflibrary.st2067_2.ApplicationComposition;
+import com.netflix.imflibrary.st2067_2.ApplicationCompositionFactory;
+import com.netflix.imflibrary.st2067_2.Composition;
+import com.netflix.imflibrary.st2067_2.Composition.VirtualTrack;
+import com.netflix.imflibrary.st2067_2.IMFEssenceComponentVirtualTrack;
+import com.netflix.imflibrary.st2067_201.IABTrackFileConstraints;
+import com.netflix.imflibrary.st2067_203.MGASADMTrackFileConstraints;
+import com.netflix.imflibrary.st2067_204.ADMAudioTrackFileConstraints;
+import com.netflix.imflibrary.st2067_204.ADMSoundfieldGroupLabelSubDescriptor;
+import com.netflix.imflibrary.st2067_204.ADM_CHNASubDescriptor;
+import com.netflix.imflibrary.st2067_204.ADMAudioMetadataSubDescriptor;
+import com.netflix.imflibrary.utils.ByteArrayByteRangeProvider;
+import com.netflix.imflibrary.utils.ByteArrayDataProvider;
+import com.netflix.imflibrary.utils.ByteProvider;
+import com.netflix.imflibrary.utils.DOMNodeObjectModel;
+import com.netflix.imflibrary.utils.ErrorLogger;
+import com.netflix.imflibrary.utils.FileByteRangeProvider;
+import com.netflix.imflibrary.utils.ResourceByteRangeProvider;
+import com.netflix.imflibrary.utils.Utilities;
 import com.netflix.imflibrary.st0429_8.PackingList;
 import com.netflix.imflibrary.st0429_9.AssetMap;
 import com.netflix.imflibrary.st2067_100.OutputProfileList;
@@ -20,6 +49,16 @@ import org.xml.sax.SAXException;
 import jakarta.xml.bind.JAXBException;
 import java.io.IOException;
 import java.net.URISyntaxException;
+import java.nio.ByteBuffer;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.stream.Collectors;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -411,7 +450,6 @@ public class IMPValidator {
 
         return trackFileErrorLogger.getErrors();
     }
-
 
     private static String usage()
     {
