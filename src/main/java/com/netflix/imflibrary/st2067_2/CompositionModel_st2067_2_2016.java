@@ -354,7 +354,7 @@ final class CompositionModel_st2067_2_2016 {
                  InputStream xsd_core_constraints_2016 = contextClassLoader.getResourceAsStream("org/smpte_ra/schemas/st2067_2_2016/imf-core-constraints-20160411.xsd");
                  InputStream xsd_core_constraints_2020 = contextClassLoader.getResourceAsStream("org/smpte_ra/schemas/st2067_2_2020/imf-core-constraints-2020.xsd");
                  InputStream xsd_sadm_2067_203 = contextClassLoader.getResourceAsStream("org/smpte_ra/schemas/st2067_203_2023/st2067-203-2023.xsd");
-                 InputStream xsd_adm_2067_204 = contextClassLoader.getResourceAsStream("org/smpte_ra/schemas/st2067_204_2024/st2067-204-2024.xsd");)
+                 InputStream xsd_adm_2067_204 = contextClassLoader.getResourceAsStream("org/smpte_ra/schemas/st2067_204_2026-05/st2067-204a-2026-05.xsd");)
             {
                 // Build a schema from all of the XSD files provided
                 SchemaFactory schemaFactory = SchemaFactory.newInstance(XMLConstants.W3C_XML_SCHEMA_NS_URI);

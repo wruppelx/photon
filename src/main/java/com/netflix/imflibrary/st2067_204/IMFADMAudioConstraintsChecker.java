@@ -1,6 +1,6 @@
 /*
  *
- * Copyright 2024 RheinMain University of Applied Sciences, Wiesbaden, Germany.
+ * Copyright 2026 RheinMain University of Applied Sciences, Wiesbaden, Germany.
  *
  *    Licensed under the Apache License, Version 2.0 (the "License");
  *    you may not use this file except in compliance with the License.
@@ -21,15 +21,14 @@ package com.netflix.imflibrary.st2067_204;
 import com.netflix.imflibrary.IMFErrorLogger;
 import com.netflix.imflibrary.IMFErrorLoggerImpl;
 import com.netflix.imflibrary.st0377_41.*;
-import com.netflix.imflibrary.st2067_2.ApplicationComposition;
 import com.netflix.imflibrary.st2067_2.Composition;
 import com.netflix.imflibrary.st2067_2.IMFBaseResourceType;
+import com.netflix.imflibrary.st2067_2.IMFCompositionPlaylist;
 import com.netflix.imflibrary.st2067_2.IMFEssenceComponentVirtualTrack;
 import com.netflix.imflibrary.st2067_2.IMFTrackFileResourceType;
 import com.netflix.imflibrary.st2067_2.Composition.SequenceTypeEnum;
 import com.netflix.imflibrary.utils.DOMNodeObjectModel;
 import com.netflix.imflibrary.utils.ErrorLogger;
-import com.netflix.imflibrary.utils.RegXMLLibDictionary;
 import com.netflix.imflibrary.utils.UUIDHelper;
 
 import java.util.ArrayList;
@@ -61,7 +60,6 @@ public class IMFADMAudioConstraintsChecker {
     public static List<ErrorLogger.ErrorObject> checkADMAudioVirtualTrack(Composition.EditRate compositionEditRate,
                                                                      Map<UUID, ? extends Composition.VirtualTrack> virtualTrackMap,
                                                                      Map<UUID, DOMNodeObjectModel> essenceDescriptorListMap,
-                                                                     RegXMLLibDictionary regXMLLibDictionary,
                                                                      Set<String> homogeneitySelectionSet) {
         IMFErrorLogger imfErrorLogger = new IMFErrorLoggerImpl();
         Iterator iterator = virtualTrackMap.entrySet().iterator();
@@ -175,15 +173,15 @@ public class IMFADMAudioConstraintsChecker {
         }
         return imfErrorLogger.getErrors();
     }
-    public static List<ErrorLogger.ErrorObject> checkADMAudioVirtualTrackParameterSet(ApplicationComposition applicationComposition) {
+    public static List<ErrorLogger.ErrorObject> checkADMAudioVirtualTrackParameterSet(IMFCompositionPlaylist imfCompositionPlaylist) {
 
         IMFErrorLogger imfErrorLogger = new IMFErrorLoggerImpl();
     	List<ADMAudioVirtualTrackParameterSet> admAudioVirtualTrackParameterSetList = new ArrayList<>();
         List<String> admAudioSignalSequenceTrackIds = new ArrayList<>();
         Map<UUID , List<String>> admAudioResourceHash = new LinkedHashMap<>();
         Set<Object> virtualTrackParameterSet = Collections.emptySet();
-        if (applicationComposition.getExtensionProperties() != null) {
-            virtualTrackParameterSet = applicationComposition.getExtensionProperties().getAny().stream().collect(Collectors.toSet());
+        if (imfCompositionPlaylist.getExtensionProperties() != null) {
+            virtualTrackParameterSet = imfCompositionPlaylist.getExtensionProperties().getAny().stream().collect(Collectors.toSet());
             Iterator<Object> iterator = virtualTrackParameterSet.iterator();
             while (iterator != null && iterator.hasNext()) {
                 Object obj = iterator.next();
@@ -198,7 +196,7 @@ public class IMFADMAudioConstraintsChecker {
                 }
             }
         }
-        for (IMFEssenceComponentVirtualTrack virtualTrack : applicationComposition.getEssenceVirtualTracks()) {
+        for (IMFEssenceComponentVirtualTrack virtualTrack : imfCompositionPlaylist.getEssenceVirtualTracks()) {
             // ST 2067-204, section 5.3.4, check for an ADM Audio Virtual Track Parameter Set for each ADM Audio Virtual Track
             if (virtualTrack.getSequenceType() == "ADMAudioSequence") {
                 admAudioSignalSequenceTrackIds.add(UUIDHelper.fromUUID(virtualTrack.getTrackID()));
@@ -209,7 +207,7 @@ public class IMFADMAudioConstraintsChecker {
                 }
                 admAudioResourceHash.put(virtualTrack.getTrackID(), resource_id_list);
 
-                if (applicationComposition.getExtensionProperties() != null) {
+                if (imfCompositionPlaylist.getExtensionProperties() != null) {
                     int trackIdsFound = 0;
                     for (ADMAudioVirtualTrackParameterSet vps : admAudioVirtualTrackParameterSetList) {
                         if (UUIDHelper.fromUUID(virtualTrack.getTrackID()).matches(vps.getTrackId())) trackIdsFound++;
@@ -242,12 +240,12 @@ public class IMFADMAudioConstraintsChecker {
 	                        imfErrorLogger.addError(IMFErrorLogger.IMFErrors.ErrorCodes.IMF_CPL_ERROR,
 	                                IMFErrorLogger.IMFErrors.ErrorLevels.NON_FATAL, String.format("ADMSoundfieldGroupSelectorType for Track ID %s references unknown resource %s", vps.getTrackId(), adm_sg_selector.getResourceId()));
 	                    } else {
-	                        Optional<IMFEssenceComponentVirtualTrack> optional = applicationComposition.getEssenceVirtualTracks().stream().filter(e->e.getTrackID().equals(UUIDHelper.fromUUIDAsURNStringToUUID(vps.getTrackId()))).findAny();
+	                        Optional<IMFEssenceComponentVirtualTrack> optional = imfCompositionPlaylist.getEssenceVirtualTracks().stream().filter(e->e.getTrackID().equals(UUIDHelper.fromUUIDAsURNStringToUUID(vps.getTrackId()))).findAny();
 	                        if (optional.isPresent()) {
 	                            IMFEssenceComponentVirtualTrack virtual_track = optional.get();
 	                            Optional<IMFTrackFileResourceType> optional2 = virtual_track.getTrackFileResourceList().stream().filter(e->e.getId().equals(adm_sg_selector.getResourceId())).findAny();
 	                            if (optional2.isPresent()) {
-	                                DOMNodeObjectModel essence_descriptor_dom_node = applicationComposition.getEssenceDescriptor(UUIDHelper.fromUUIDAsURNStringToUUID(optional2.get().getTrackFileId()));
+	                                DOMNodeObjectModel essence_descriptor_dom_node = imfCompositionPlaylist.getEssenceDescriptor(UUIDHelper.fromUUIDAsURNStringToUUID(optional2.get().getTrackFileId()));
 	                                List<UUID> mca_sg_link_id_list = new ArrayList<>();
 	                                for (Map.Entry<DOMNodeObjectModel, Integer> entry : essence_descriptor_dom_node.getChildrenDOMNodes().entrySet()) {
 	                                    if (!entry.getKey().getLocalName().equals("SubDescriptors")) continue;

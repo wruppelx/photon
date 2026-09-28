@@ -576,7 +576,7 @@ public class CompositionPlaylistBuilder_2016 {
                         any.add(mgasadmFactory.createMGASADMSignalSequence(sequenceTypeTuple.getSequence()));
                         break;
                     case "ADMAudioSequence":
-                        // JAXB class for MGASADMSignalSequence was generated in the CC 2016 package. Use that
+                        // JAXB class for ADMAudioSequence
                         any.add(admFactory.createADMAudioSequence(sequenceTypeTuple.getSequence()));
                         break;
                     case Composition.MARKER_SEQUENCE:

@@ -10,17 +10,8 @@ import com.netflix.imflibrary.st0429_8.PackingList;
 import com.netflix.imflibrary.st0429_9.AssetMap;
 import com.netflix.imflibrary.st0429_9.BasicMapProfileV2MappedFileSet;
 import com.netflix.imflibrary.st2067_100.OutputProfileList;
-import com.netflix.imflibrary.st2067_2.ApplicationComposition;
-import com.netflix.imflibrary.st2067_2.ApplicationCompositionFactory;
-import com.netflix.imflibrary.st2067_2.Composition;
-import com.netflix.imflibrary.st2067_2.IMFEssenceComponentVirtualTrack;
-import com.netflix.imflibrary.st2067_203.IMFMGASADMConstraintsChecker;
-import com.netflix.imflibrary.st2067_204.IMFADMAudioConstraintsChecker;
-import com.netflix.imflibrary.utils.ByteArrayDataProvider;
-import com.netflix.imflibrary.utils.ByteProvider;
-import com.netflix.imflibrary.utils.ErrorLogger;
-import com.netflix.imflibrary.utils.FileByteRangeProvider;
-import com.netflix.imflibrary.utils.ResourceByteRangeProvider;
+import com.netflix.imflibrary.st2067_2.*;
+import com.netflix.imflibrary.utils.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -185,7 +176,8 @@ public class IMPAnalyzer {
                                     // add entry to track file map for further validation
                                     trackFileMap.put(trackFileID, new TrackFilePartitionsRecord(filename, headerPartitionPayloadRecord, indexTablePartitionPayloadRecords));
                                 } catch( MXFException e) {
-                                    assetErrorLogger.addAllErrors(e.getErrors());
+                                    assetErrorLogger.addError(IMFErrorLogger.IMFErrors.ErrorCodes.IMF_ESSENCE_COMPONENT_ERROR, IMFErrorLogger.IMFErrors.ErrorLevels.FATAL, e.getMessage());
+                                    //assetErrorLogger.addAllErrors(e.getErrors());
                                 }
                                 catch( IMFException e) {
                                     assetErrorLogger.addAllErrors(e.getErrors());
