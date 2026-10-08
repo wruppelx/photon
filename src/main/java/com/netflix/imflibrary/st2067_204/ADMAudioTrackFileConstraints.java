@@ -95,7 +95,6 @@ public final class ADMAudioTrackFileConstraints {
                 List<InterchangeObject.InterchangeObjectBO> subDescriptors = headerPartition.getSubDescriptors();
                 if (genericDescriptor instanceof WaveAudioEssenceDescriptor) { // Support for st2067-204
 
-
                     //
                     // WaveAudioEssenceDescriptor
                     //
@@ -192,9 +191,12 @@ public final class ADMAudioTrackFileConstraints {
                                                 String.format("ADMSoundfieldGroupLabelSubDescriptor with ID %s in the IMFTrackFile represented by ID %s does not have the required MCA Label Dictionary Id %s but %s", sub_descriptor.getInstanceUID().toString(), packageID.toString(), ADMSoundfieldGroupLabelSubDescriptor.ADM_MCA_LABEL_DICTIONNARY_ID_UL, admSoundfieldGroupLabelSubDescriptorBO.getMCALabelDictionnaryId().toString()));
                                     }
                                 }
-                                if (admSoundfieldGroupLabelSubDescriptorBO.getRFC5646SpokenLanguage() != null &&
-                                        !IMFConstraints.isSpokenLanguageRFC5646Compliant(admSoundfieldGroupLabelSubDescriptorBO.getRFC5646SpokenLanguage())) {
-                                    imfErrorLogger.addError(new ErrorLogger.ErrorObject(IMFErrorLogger.IMFErrors.ErrorCodes.IMF_ESSENCE_COMPONENT_ERROR, IMFErrorLogger.IMFErrors.ErrorLevels.NON_FATAL, String.format("Language Code (%s) in ADMSoundfieldGroupLabelSubDescriptor with ID %s in the IMFTrackfile represented by ID %s is not RFC5646 compliant", admSoundfieldGroupLabelSubDescriptorBO.getRFC5646SpokenLanguage(), sub_descriptor.getInstanceUID().toString(), packageID.toString())));
+                                if (admSoundfieldGroupLabelSubDescriptorBO.getRFC5646SpokenLanguage() == null) {
+                                    imfErrorLogger.addError(new ErrorLogger.ErrorObject(IMFErrorLogger.IMFErrors.ErrorCodes.IMF_ESSENCE_COMPONENT_ERROR, IMFErrorLogger.IMFErrors.ErrorLevels.NON_FATAL, String.format("ADMSoundfieldGroupLabelSubDescriptor with ID %s in the IMFTrackFile represented by ID %s is missing RFC5646SpokenLanguage", sub_descriptor.getInstanceUID().toString(), packageID.toString())));
+                                } else {
+                                    if (!IMFConstraints.isSpokenLanguageRFC5646Compliant(admSoundfieldGroupLabelSubDescriptorBO.getRFC5646SpokenLanguage())) {
+                                        imfErrorLogger.addError(new ErrorLogger.ErrorObject(IMFErrorLogger.IMFErrors.ErrorCodes.IMF_ESSENCE_COMPONENT_ERROR, IMFErrorLogger.IMFErrors.ErrorLevels.NON_FATAL, String.format("Language Code (%s) in ADMSoundfieldGroupLabelSubDescriptor with ID %s in the IMFTrackfile represented by ID %s is not RFC5646 compliant", admSoundfieldGroupLabelSubDescriptorBO.getRFC5646SpokenLanguage(), sub_descriptor.getInstanceUID().toString(), packageID.toString())));
+                                    }
                                 }
                                 if (admSoundfieldGroupLabelSubDescriptorBO.getMCAContent() == null) {
                                     imfErrorLogger.addError(IMFErrorLogger.IMFErrors.ErrorCodes.IMF_CORE_CONSTRAINTS_ERROR, IMFErrorLogger.IMFErrors.ErrorLevels.WARNING, IMF_ADM_AUDIO_EXCEPTION_PREFIX +
@@ -252,19 +254,45 @@ public final class ADMAudioTrackFileConstraints {
                             imfErrorLogger.addError(IMFErrorLogger.IMFErrors.ErrorCodes.IMF_CORE_CONSTRAINTS_ERROR, IMFErrorLogger.IMFErrors.ErrorLevels.NON_FATAL, IMF_ADM_AUDIO_EXCEPTION_PREFIX +
                                     String.format("WAVE Audio Essence Descriptor in the IMFTrackFile represented by ID %s refers to %d ADMAudioMetadataSubDescriptor, 1 is required per ST 2067-204", packageID.toString(), admAudioMetadataSubDescriptors.size()));
                         } else {
-                            // ST 2067-204 section 5.6.2 Table 3
+                            // ST 2131:2026-05 Table 11, ST 2067-204:2026-05 Table 1
                             ADMAudioMetadataSubDescriptor.ADMAudioMetadataSubDescriptorBO admAudioMetadataSubDescriptorBO = ADMAudioMetadataSubDescriptor.ADMAudioMetadataSubDescriptorBO.class.cast(admAudioMetadataSubDescriptors.get(0));
 
                             if (admAudioMetadataSubDescriptorBO.getRIFFChunkStreamID_link1() == null) {
                                 imfErrorLogger.addError(IMFErrorLogger.IMFErrors.ErrorCodes.IMF_CORE_CONSTRAINTS_ERROR, IMFErrorLogger.IMFErrors.ErrorLevels.NON_FATAL, IMF_ADM_AUDIO_EXCEPTION_PREFIX +
-                                        String.format("ADMAudioMetadataSubDescriptor in the IMFTrackFile represented by ID %s is missing MGALinkId", packageID.toString()));
+                                        String.format("ADMAudioMetadataSubDescriptor in the IMFTrackFile represented by ID %s is missing RIFFChunkStreamID_link1", packageID.toString()));
                             }
                             if (admAudioMetadataSubDescriptorBO.getADMProfileLevelULBatch() == null) {
                                 imfErrorLogger.addError(IMFErrorLogger.IMFErrors.ErrorCodes.IMF_CORE_CONSTRAINTS_ERROR, IMFErrorLogger.IMFErrors.ErrorLevels.WARNING, IMF_ADM_AUDIO_EXCEPTION_PREFIX +
                                         String.format("ADMAudioMetadataSubDescriptor in the IMFTrackFile represented by ID %s is missing ADMProfileLevelULBatch", packageID.toString()));
+                            } else {
+                                CompoundDataTypes.MXFCollections.MXFCollection<UL> admProfileLevelULBatch = admAudioMetadataSubDescriptorBO.getADMProfileLevelULBatch();
+                                // TODO: Check ULs in admProfileLevelULBatch against Labels.xml for <Applications>ADMProfileLevel</Applications>
+                            }
+                        }
+                        //
+                        // RIFFChunkDefinitionSubDescriptor
+                        //
+                        List<InterchangeObject.InterchangeObjectBO> riffChunkDefinitionSubDescriptors = subDescriptors.subList(0, subDescriptors.size()).stream().filter(interchangeObjectBO -> interchangeObjectBO.getClass().getEnclosingClass().equals(RIFFChunkDefinitionSubDescriptor.class)).collect(Collectors.toList());
+                        if (riffChunkDefinitionSubDescriptors.size() != 1) {
+                            imfErrorLogger.addError(IMFErrorLogger.IMFErrors.ErrorCodes.IMF_CORE_CONSTRAINTS_ERROR, IMFErrorLogger.IMFErrors.ErrorLevels.NON_FATAL, IMF_ADM_AUDIO_EXCEPTION_PREFIX +
+                                    String.format("WAVE Audio Essence Descriptor in the IMFTrackFile represented by ID %s refers to %d RIFFChunkDefinitionSubDescriptor, 1 is required per ST 2067-204", packageID.toString(), riffChunkDefinitionSubDescriptors.size()));
+                        } else {
+                            // ST 2131:2026-05 Table 3
+                            RIFFChunkDefinitionSubDescriptor.RIFFChunkDefinitionSubDescriptorBO riffChunkDefinitionSubDescriptorsB0 = RIFFChunkDefinitionSubDescriptor.RIFFChunkDefinitionSubDescriptorBO.class.cast(riffChunkDefinitionSubDescriptors.get(0));
+
+                            if (riffChunkDefinitionSubDescriptorsB0.getRIFFChunkStreamID() == null) {
+                                imfErrorLogger.addError(IMFErrorLogger.IMFErrors.ErrorCodes.IMF_CORE_CONSTRAINTS_ERROR, IMFErrorLogger.IMFErrors.ErrorLevels.NON_FATAL, IMF_ADM_AUDIO_EXCEPTION_PREFIX +
+                                        String.format("RIFFChunkDefinitionSubDescriptor in the IMFTrackFile represented by ID %s is missing RIFFChunkStreamID", packageID.toString()));
+                            }
+                            if (riffChunkDefinitionSubDescriptorsB0.getRIFFChunkID() == null) {
+                                imfErrorLogger.addError(IMFErrorLogger.IMFErrors.ErrorCodes.IMF_CORE_CONSTRAINTS_ERROR, IMFErrorLogger.IMFErrors.ErrorLevels.NON_FATAL, IMF_ADM_AUDIO_EXCEPTION_PREFIX +
+                                        String.format("RIFFChunkDefinitionSubDescriptor in the IMFTrackFile represented by ID %s is missing RIFFChunkID", packageID.toString()));
                             }
                         }
                     }
+                } else {
+                    imfErrorLogger.addError(IMFErrorLogger.IMFErrors.ErrorCodes.IMF_ESSENCE_COMPONENT_ERROR, IMFErrorLogger.IMFErrors.ErrorLevels.NON_FATAL, IMF_ADM_AUDIO_EXCEPTION_PREFIX +
+                            String.format("IMFTrackFile represented by ID %s. does not contain a Wave Audio Essence Descriptor ", packageID.toString()));
                 }
             }
         }

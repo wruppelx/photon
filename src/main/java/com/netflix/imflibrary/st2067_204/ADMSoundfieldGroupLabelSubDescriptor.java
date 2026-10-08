@@ -109,7 +109,7 @@ public final class ADMSoundfieldGroupLabelSubDescriptor extends SoundFieldGroupL
 
         /**
          * Accessor for the adm_audio_programm_id of this ADMSoundfieldGroupLabelSubDescriptor
-         * @return a byte array representing the adm_audio_programm_id for the MGASoundfieldGroupLabelSubDescriptor
+         * @return a byte array representing the adm_audio_programm_id for the ADMSoundfieldGroupLabelSubDescriptor
          */
         public String getADMAudioProgrammeId(){
             return this.adm_audio_programme_id_st2131;
@@ -117,7 +117,7 @@ public final class ADMSoundfieldGroupLabelSubDescriptor extends SoundFieldGroupL
 
         /**
          * Accessor for the adm_audio_content_id of this ADMSoundfieldGroupLabelSubDescriptor
-         * @return a byte array representing the adm_audio_content_id for the MGASoundfieldGroupLabelSubDescriptor
+         * @return a byte array representing the adm_audio_content_id for the ADMSoundfieldGroupLabelSubDescriptor
          */
         public String getADMAudioContentId(){
             return this.adm_audio_content_id_st2131;
@@ -125,7 +125,7 @@ public final class ADMSoundfieldGroupLabelSubDescriptor extends SoundFieldGroupL
 
         /**
          * Accessor for the adm_audio_object_id of this ADMSoundfieldGroupLabelSubDescriptor
-         * @return a byte array representing the adm_audio_object_id for the MGASoundfieldGroupLabelSubDescriptor
+         * @return a byte array representing the adm_audio_object_id for the ADMSoundfieldGroupLabelSubDescriptor
          */
         public String getADMAudioObjectId(){
             return this.adm_audio_object_id_st2131;

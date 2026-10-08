@@ -102,6 +102,22 @@ public final class RIFFChunkDefinitionSubDescriptor extends SubDescriptor {
         }
 
         /**
+         * Accessor for the riff_chunk_stream_id of this RIFFChunkDefinitionSubDescriptor
+         * @return a Long value representing the riff_chunk_stream_id for the RIFFChunkDefinitionSubDescriptor
+         */
+        public Long getRIFFChunkStreamID(){
+            return this.riff_chunk_stream_id;
+        }
+
+        /**
+         * Accessor for the riff_chunk_stream_id of this RIFFChunkDefinitionSubDescriptor
+         * @return a Long value representing the riff_chunk_stream_id for the RIFFChunkDefinitionSubDescriptor
+         */
+        public byte[] getRIFFChunkID(){
+            return this.riff_chunk_id;
+        }
+
+        /**
          * A method that returns a string representation of the object.
          *
          * @return string representing the object
