@@ -1,12 +1,13 @@
 package com.netflix.imflibrary.validation;
 
 
-import com.netflix.imflibrary.IMFConstraints;
 import com.netflix.imflibrary.IMFErrorLogger;
 import com.netflix.imflibrary.IMFErrorLoggerImpl;
 import com.netflix.imflibrary.KLVPacket;
 import com.netflix.imflibrary.RESTfulInterfaces.PayloadRecord;
 import com.netflix.imflibrary.exceptions.IMFException;
+import com.netflix.imflibrary.HeaderPartitionIMF;
+import com.netflix.imflibrary.MXFOperationalPattern1A;
 import com.netflix.imflibrary.exceptions.MXFException;
 import com.netflix.imflibrary.st0377.HeaderPartition;
 import com.netflix.imflibrary.st0377.PrimerPack;
@@ -61,6 +62,11 @@ abstract public class IMFCPLValidator implements ConstraintsValidator {
             List<? extends IMFBaseResourceType> virtualTrackResourceList = virtualTrack.getResourceList();
             imfErrorLogger.addAllErrors(checkVirtualTrackResourceList(virtualTrack.getTrackID(), virtualTrackResourceList));
 
+            if (virtualTrack instanceof IMFMarkerVirtualTrack) {
+                imfErrorLogger.addAllErrors(checkMarkerLabelConstraints(
+                        IMFMarkerVirtualTrack.class.cast(virtualTrack)));
+            }
+
             // retrieve sequence namespace associated with the virtual track
             String virtualTrackSequenceNamespace = imfCompositionPlaylist.getSequenceNamespaceForVirtualTrackID(virtualTrack.getTrackID());
             if (!supportedCPLSchemaURIs.contains(virtualTrackSequenceNamespace)) {
@@ -68,9 +74,36 @@ abstract public class IMFCPLValidator implements ConstraintsValidator {
             }
 
         }
+        return imfErrorLogger.getErrors();
+    }
 
+    private static List<ErrorLogger.ErrorObject> checkMarkerLabelConstraints(IMFMarkerVirtualTrack markerVirtualTrack)
+    {
+        IMFErrorLogger imfErrorLogger = new IMFErrorLoggerImpl();
+        // an unrecognized scope is reported once per scope, not once per marker
+        Set<String> unrecognizedScopes = new HashSet<>();
 
-        // MARKER TRACK VALIDATION, CONTENT KIND VALUES, ETC
+        for (IMFMarkerResourceType markerResource : markerVirtualTrack.getMarkerResourceList()) {
+            for (IMFMarkerType marker : markerResource.getMarkerList()) {
+                IMFMarkerType.Label label = marker.getLabel();
+                MarkerLabelRegistry.Scope markerScope = MarkerLabelRegistry.getScope(label.getScope());
+                String scope = label.getScope() == null ? MarkerLabelRegistry.DEFAULT_SCOPE : label.getScope();
+
+                if (markerScope == null) {
+                    if (unrecognizedScopes.add(scope)) {
+                        imfErrorLogger.addError(IMFErrorLogger.IMFErrors.ErrorCodes.IMF_CPL_ERROR,
+                                IMFErrorLogger.IMFErrors.ErrorLevels.WARNING,
+                                String.format("Marker Label scope '%s' is not recognized; its Marker Label values cannot be validated", scope));
+                    }
+                }
+                else if (!markerScope.isPermitted(label.getValue())) {
+                    imfErrorLogger.addError(IMFErrorLogger.IMFErrors.ErrorCodes.IMF_CPL_ERROR,
+                            markerScope.getUnlistedLabelLevel(),
+                            String.format("Marker Label value '%s' at offset %s is not permitted by scope '%s'",
+                                    label.getValue(), marker.getOffset(), scope));
+                }
+            }
+        }
 
         return imfErrorLogger.getErrors();
     }
@@ -231,7 +264,7 @@ abstract public class IMFCPLValidator implements ConstraintsValidator {
                         imfErrorLogger);
 
                 // check for compliance
-                imfErrorLogger.addAllErrors(IMFConstraints.checkMXFHeaderMetadata(headerPartition));
+                imfErrorLogger.addAllErrors(IMFTrackFileStructureConstraints.checkHeaderMetadata(headerPartition));
                 if (imfErrorLogger.hasFatalErrors())
                     return imfErrorLogger.getErrors();
 
@@ -242,6 +275,25 @@ abstract public class IMFCPLValidator implements ConstraintsValidator {
                 for (IMFTrackFileResourceType tf : imfCompositionPlaylist.getTrackFileResources()) {
                     if (packageUUID.equals(UUIDHelper.fromUUIDAsURNStringToUUID(tf.getTrackFileId()))) {
                         referencedHeaderPayloads.put(packageUUID, payloadRecord);
+
+                        // essence kind and application specific Track File checks come from the validators this Track File's
+                        // use in the Composition selects: its sequence namespace and the Composition's application identifications
+                        EssenceValidationContext trackFileContext = EssenceValidationContext.of(imfCompositionPlaylist.getApplicationIdSet(),
+                                imfCompositionPlaylist.getSequenceNamespaceForTrackFileID(packageUUID));
+                        try {
+                            HeaderPartitionIMF headerPartitionIMF = HeaderPartitionIMF.wrap(
+                                    MXFOperationalPattern1A.checkOperationalPattern1ACompliance(headerPartition, new IMFErrorLoggerImpl()));
+                            for (ConstraintsValidator validator : ConstraintsValidatorFactory.getValidators(trackFileContext, imfErrorLogger)) {
+                                // Composition validation has always included the core constraints for the referenced Track Files.
+                                // Plug-in Track File checks are reported by the essence partition validation of the Track File itself
+                                // (see IMPValidator#validateEssencePartitions), so they are not repeated here.
+                                if (validator instanceof IMFCoreConstraintsValidator) {
+                                    imfErrorLogger.addAllErrors(validator.validateTrackFileHeaderConstraints(headerPartitionIMF));
+                                }
+                            }
+                        } catch (IMFException e) {
+                            // already reported by the structural checks above
+                        }
 
                         Composition.HeaderPartitionTuple headerPartitionTuple = new Composition.HeaderPartitionTuple(headerPartition,
                                 new ByteArrayByteRangeProvider(payloadRecord.getPayload()));
@@ -525,7 +577,7 @@ abstract public class IMFCPLValidator implements ConstraintsValidator {
 
     private static List<KLVPacket.Header> getSubDescriptorKLVHeader(HeaderPartition headerPartition, InterchangeObject.InterchangeObjectBO essenceDescriptor) {
         List<KLVPacket.Header> subDescriptorHeaders = new ArrayList<>();
-        List<InterchangeObject.InterchangeObjectBO> subDescriptors = headerPartition.getSubDescriptors(essenceDescriptor);
+        List<InterchangeObject.InterchangeObjectBO> subDescriptors = headerPartition.getSubDescriptorsAndDependencies(essenceDescriptor);
         for (InterchangeObject.InterchangeObjectBO subDescriptorBO : subDescriptors) {
             if (subDescriptorBO != null) {
                 subDescriptorHeaders.add(subDescriptorBO.getHeader());
